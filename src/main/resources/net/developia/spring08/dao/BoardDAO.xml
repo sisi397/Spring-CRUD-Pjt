@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.developia.spring08.dao.BoardDAO">
+	<sql id="criteria">
+		<trim prefix="where (" suffix= ") " prefixOverrides="OR">
+			<foreach item="type" collection="criteria.typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{criteria.keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content like '%'||#{criteria.keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							name  like '%'||#{criteria.keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	
+	<insert id="insertBoard" parameterType="BoardDTO">
+		<selectKey keyProperty="no" order="BEFORE" resultType="long">
+			select board_no_seq.nextval from dual
+		</selectKey>
+		insert into board(no, title, name, content) 
+		values(#{no}, #{title}, #{name}, #{content})
+	</insert>
+	
+	<select id="getBoardList" resultType="BoardDTO">
+		select * 
+		from (select row_number() over(order by no desc) as rnum, no, title, name, regdate, readcount 
+		from board 
+		<include refid="criteria"></include>
+		) 
+		where rnum between #{beginRow} and #{endRow} 
+	</select>
+	
+	<select id="getDetail" parameterType="long" resultType="BoardDTO">
+		select no, title, name, content, regdate, readcount 
+		from board
+		where no = #{no}
+	</select>
+	
+	<update id="updateReadCount" parameterType="long">
+		update board set readcount = readcount+1 where no = #{no}
+	</update>
+	
+	<delete id="deleteBoard" parameterType="BoardDTO">
+		delete board where no=${no}
+	</delete>
+	
+	<update id="updateBoard" parameterType="BoardDTO">
+		update board set title = #{title}, content = #{content} where no = #{no}
+	</update>
+	
+	<select id="getTotalCount" resultType="int">
+		select count(*) from board 
+		<include refid="criteria"></include>
+	</select> 
+	
+	<select id="getWords" resultType="String">
+		select distinct title from board where title like '%'||#{keyword}||'%'
+	</select>
+	
+	<insert id="insertSearch">
+		insert into search(sno, keyword, scount) 
+		values(seq_search.nextval, #{keyword}, 1)
+	</insert>
+	
+	<select id="countKeyword" resultType="int">
+		select count(*) from search where keyword=#{keyword}
+	</select>
+	
+	<update id="updateSearch">
+		update search set scount = scount+1 where keyword=#{keyword} 
+	</update>
+	
+	<select id="bestKeyword" resultType="String">
+		<![CDATA[
+			select keyword from search where rownum < 10 order by scount desc
+		]]>
+	</select>
+</mapper>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.developia.spring08.dao.CommentsDAO">
+
+	<insert id="insert">
+		insert into comments (cno, bno, comments, name)
+		values (seq_comments.nextval, #{bno}, #{comments}, #{name})
+	</insert>
+	
+	<select id="read" resultType="CommentsDTO">
+		select * from comments where cno = #{cno}
+	</select>
+	
+	<delete id="delete">
+		delete from comments where cno = #{cno}
+	</delete>
+	
+	<update id="update">
+		update comments set comments = #{comments}, updatedate = sysdate where cno=#{cno}
+	</update>
+	
+	<select id="getCommentsList" resultType="CommentsDTO">
+		select * from comments where bno=#{bno} order by cno desc
+	</select>
+</mapper>
